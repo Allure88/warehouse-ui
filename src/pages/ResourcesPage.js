@@ -15,8 +15,8 @@ const ResourcesPage = () => {
       try {
         const res = await getResources();
         if (res.data.Success) {
-          setData(res.data.Body);
-          setFilteredData(res.data.Body);
+          setData(res.data.Body.Resources);
+          setFilteredData(res.data.Body.Resources);
         } else {
           setError(res.data.Errors.join(', '));
         }
@@ -62,8 +62,8 @@ const ResourcesPage = () => {
             <option value="Archived">В архиве</option>
           </select>
         </div>
-        <Link to="/resources/create" className="btn btn-primary">Добавить</Link>
       </div>
+        <Link to="/resources/create" className="btn btn-primary">Добавить</Link>
       {error && <ToastError message={error} onClose={() => setError('')} />}
       <DataTable
         data={filteredData}

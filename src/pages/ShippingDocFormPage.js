@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getShippingDocs} from '../services/shippingDocsService';
 import { getResources} from '../services/resourcesService';
+import { getUnits } from '../services/unitsService';
 import { getClients } from '../services/clientsService';
 import { createShippingDoc, updateShippingDoc, signShippingDoc, revocateShippingDoc, deleteShippingDoc } from '../services/shippingDocsService';
 import ToastError from '../components/ToastError';
@@ -10,29 +11,35 @@ const ShippingDocFormPage = ({ mode }) => {
   const { number } = useParams();
   const navigate = useNavigate();
   const [resources, setResources] = useState([]);
+  const [units, setUnits] = useState([]);
   const [clients, setClients] = useState([]);
   const [formData, setFormData] = useState({
     Number: '',
     Date: '',
     Client: { Name: '' },
     Status: 'Created',
-    ResBody: { Resource: { Name: '' }, UnitOfMeasurement: { UnitDescription: '' }, Quantity: 0 },
+    ResBody: {
+      Resource: { Name: '', State: '' },
+      UnitOfMeasurement: { Name: '', State: '' },
+      Quantity: 0,
+    },
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [resRes, resClients] = await Promise.all([getResources(), getClients()]);
-        if (resRes.data.Success) setResources(resRes.data.Body);
-        if (resClients.data.Success) setClients(resClients.data.Body);
+        const [resRes, resClients, resUnits] = await Promise.all([getResources(), getClients(), getUnits()]);
+        if (resRes.data.Success) setResources(resRes.data.Body.Resources);
+        if (resClients.data.Success) setClients(resClients.data.Body.Clients);
+        if (resUnits.data.Success) setUnits(resUnits.data.Body.Units);
       } catch (err) {
         setError('Ошибка загрузки данных');
       }
 
       if (mode === 'edit') {
         const res = await getShippingDocs();
-        const doc = res.data.Body.find(d => d.Number === number);
+        const doc = res.data.Body.ShippingDocs.find(d => d.Number === number);
         if (doc) setFormData(doc);
       }
     };
@@ -41,20 +48,49 @@ const ShippingDocFormPage = ({ mode }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.startsWith('ResBody.Resource')) {
+    if (name.startsWith('ResBody.Resource')) 
+    {
       const resource = resources.find(r => r.Name === value);
       setFormData(prev => ({
         ...prev,
         ResBody: {
           ...prev.ResBody,
-          Resource: resource || { Name: '' },
-          UnitOfMeasurement: { UnitDescription: 'шт' },
+          Resource: resource || { Name: '', State: 'Active' },
+          UnitOfMeasurement: prev.ResBody.UnitOfMeasurement || { Name: '' , State: 'Active'},
         },
       }));
-    } else if (name === 'Client.Name') {
+    }
+    else if (name.startsWith('ResBody.UnitOfMeasurement')) 
+    {
+     const unit = units.find(u=>u.Name === value);
+      setFormData(prev => ({
+        ...prev,
+        ResBody: {
+          ...prev.ResBody,
+            Resource: prev.ResBody.Resource || { Name: '', State: 'Active' },
+            UnitOfMeasurement: unit || { Name: 'шт.', State: 'Active' },
+        },
+      }));
+    }
+     else if (name === 'ResBody.Quantity') 
+    {
+       setFormData(prev => ({
+        ...prev,
+        ResBody: {
+          ...prev.ResBody,
+            Resource: prev.ResBody.Resource || { Name: '', State: 'Active' },
+            UnitOfMeasurement: prev.ResBody.UnitOfMeasurement || { Name: '' , State: 'Active'},
+            Quantity: value
+        },
+      }));
+    } 
+     else if (name === 'Client.Name') 
+    {
       const client = clients.find(c => c.Name === value);
       setFormData(prev => ({ ...prev, Client: client || { Name: '' } }));
-    } else {
+    } 
+    else
+    {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
@@ -143,20 +179,40 @@ const ShippingDocFormPage = ({ mode }) => {
             {resources.map(r => <option key={r.Name} value={r.Name}>{r.Name}</option>)}
           </select>
         </div>
-        <div className="mb-3">
-          <label>Количество</label>
-          <input type="number" step="0.01" name="ResBody.Quantity" className="form-control" value={formData.ResBody.Quantity} onChange={handleChange} required />
+               <div className="mb-3">
+          <label>Единица измерения</label>
+          <select
+            type="text"
+            name="ResBody.UnitOfMeasurement"
+            className="form-control"
+            value={formData.ResBody.UnitOfMeasurement.Name}
+             onChange={handleChange}
+            required
+          >
+             <option value="">Выберите единицу измерения</option>
+            {units.map(r => (
+              <option key={r.Name} value={r.Name}>{r.Name}</option>
+            ))}
+          </select>
         </div>
         <div className="mb-3">
-          <label>Единица измерения</label>
-          <input type="text" className="form-control" value="шт" readOnly />
+             <label>Количество</label>
+            <input
+              type="number"
+              step="0.01"
+              name="ResBody.Quantity"
+              className="form-control"
+              value={formData.ResBody.Quantity}
+              onChange={handleChange}
+              required
+            /> 
         </div>
         <div className="mb-3">
           <label>Статус</label>
           <input type="text" className="form-control" value={formData.Status} readOnly />
         </div>
         <button type="submit" className="btn btn-success me-2">Сохранить</button>
-        {formData.Status === 'Created' && (
+        {(formData.Status === 'Created' ||formData.Status === 'Revocated' )  && (
           <button type="button" className="btn btn-primary me-2" onClick={handleSign}>Подписать</button>
         )}
         {formData.Status === 'Approved' && (

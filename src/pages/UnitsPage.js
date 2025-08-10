@@ -15,8 +15,8 @@ const UnitsPage = () => {
       try {
         const res = await getUnits();
         if (res.data.Success) {
-          setData(res.data.Body);
-          setFilteredData(res.data.Body);
+          setData(res.data.Body.Units);
+          setFilteredData(res.data.Body.Units);
         } else {
           setError(res.data.Errors.join(', '));
         }
@@ -30,7 +30,7 @@ const UnitsPage = () => {
   useEffect(() => {
     let result = data;
     if (filters.unit) {
-      result = result.filter(item => item.UnitDescription.toLowerCase().includes(filters.unit.toLowerCase()));
+      result = result.filter(item => item.Name.toLowerCase().includes(filters.unit.toLowerCase()));
     }
     if (filters.state) {
       result = result.filter(item => item.State === filters.state);
@@ -62,16 +62,19 @@ const UnitsPage = () => {
             <option value="Archived">В архиве</option>
           </select>
         </div>
-        <Link to="/units/create" className="btn btn-primary">Добавить</Link>
       </div>
+        <Link to="/units/create" className="btn btn-primary">Добавить</Link>
       {error && <ToastError message={error} onClose={() => setError('')} />}
       <DataTable
         data={filteredData}
         columns={[
-          { header: 'Название', accessor: 'UnitDescription' },
+          { header: 'Название', accessor: 'Name' },
           { header: 'Статус', accessor: 'State' },
         ]}
-        onRowClick={(row) => window.location.href = `/units/edit/${encodeURIComponent(row.UnitDescription)}`}
+        onRowClick={(row) =>{
+           window.location.href = `/units/edit/${encodeURIComponent(row.Name)}`
+          }
+      }
       />
     </div>
   );

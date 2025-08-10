@@ -22,8 +22,8 @@ const ShippingDocsPage = () => {
       try {
         const res = await getShippingDocs();
         if (res.data.Success) {
-          setData(res.data.Body);
-          setFilteredData(res.data.Body);
+          setData(res.data.Body.ShippingDocs);
+          setFilteredData(res.data.Body.ShippingDocs);
         } else {
           setError(res.data.Errors.join(', '));
         }
@@ -40,7 +40,7 @@ const ShippingDocsPage = () => {
     if (filters.dateTo) result = result.filter(item => new Date(item.Date) <= new Date(filters.dateTo));
     if (filters.number) result = result.filter(item => item.Number.toLowerCase().includes(filters.number.toLowerCase()));
     if (filters.resource) result = result.filter(item => item.ResBody?.Resource.Name.toLowerCase().includes(filters.resource.toLowerCase()));
-    if (filters.unit) result = result.filter(item => item.ResBody?.UnitOfMeasurement.UnitDescription.toLowerCase().includes(filters.unit.toLowerCase()));
+    if (filters.unit) result = result.filter(item => item.ResBody?.UnitOfMeasurement.Name.toLowerCase().includes(filters.unit.toLowerCase()));
     setFilteredData(result);
   }, [filters, data]);
 
@@ -65,6 +65,7 @@ const ShippingDocsPage = () => {
           { header: 'Дата', accessor: 'Date' },
           { header: 'Клиент', accessor: 'Client.Name' },
           { header: 'Ресурс', accessor: 'ResBody.Resource.Name' },
+          { header: 'Единица измерения', accessor: 'ResBody.UnitOfMeasurement.Name' },
           { header: 'Количество', accessor: 'ResBody.Quantity' },
           { header: 'Статус', accessor: 'Status' },
         ]}

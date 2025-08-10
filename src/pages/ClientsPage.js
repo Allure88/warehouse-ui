@@ -7,18 +7,19 @@ import ToastError from '../components/ToastError';
 const ClientsPage = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [filters, setFilters] = useState({ name: '', address: '' });
+  const [filters, setFilters] = useState({ Name: '', Address: '' });
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await getClients();
-        if (res.data.success) {
-          setData(res.data.body);
-          setFilteredData(res.data.body);
+
+        if (res.data.Success) {
+          setData(res.data.Body.Clients);
+          setFilteredData(res.data.Body.Clients);
         } else {
-          setError(res.data.errors.join(', '));
+          setError(res.data.Errors.join(', '));
         }
       } catch (err) {
         setError('Ошибка подключения к серверу1');
@@ -29,11 +30,11 @@ const ClientsPage = () => {
 
   useEffect(() => {
     let result = data;
-    if (filters.name) {
-      result = result.filter(item => item.Name.toLowerCase().includes(filters.name.toLowerCase()));
+    if (filters.Name) {
+      result = result.filter(item => item.Name.toLowerCase().includes(filters.Name.toLowerCase()));
     }
-    if (filters.address) {
-      result = result.filter(item => item.Adress.toLowerCase().includes(filters.address.toLowerCase()));
+    if (filters.Address) {
+      result = result.filter(item => item.adress.toLowerCase().includes(filters.Address.toLowerCase()));
     }
     setFilteredData(result);
   }, [filters, data]);
@@ -70,7 +71,10 @@ const ClientsPage = () => {
           { header: 'Адрес', accessor: 'Adress' },
           { header: 'Статус', accessor: 'State' },
         ]}
-        onRowClick={(row) => window.location.href = `/clients/edit/${encodeURIComponent(row.Name)}`}
+        onRowClick={(row) =>
+        {
+          window.location.href = `/clients/edit/${encodeURIComponent(row.Name)}`}
+        }
       />
     </div>
   );

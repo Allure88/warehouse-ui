@@ -7,26 +7,43 @@ import ToastError from '../components/ToastError';
 const ClientFormPage = ({ mode }) => {
   const { name } = useParams();
   const navigate = useNavigate();
+
+  // Инициализация formData с пустыми значениями
   const [formData, setFormData] = useState({
     Name: '',
     Adress: '',
     State: 'Active'
   });
+
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(mode === 'edit'); // Только при редактировании
 
   useEffect(() => {
-    if (mode === 'edit') {
+    if (mode === 'edit' && name) {
       const loadClient = async () => {
         try {
+          const decodedName = decodeURIComponent(name); // Декодируем имя
           const res = await getClients();
+
           if (res.data.Success) {
-            const client = res.data.Body.find(c => c.Name === decodeURIComponent(name));
-            if (client) setFormData(client);
+            const client = res.data.Body.Clients.find(c => c.Name === decodedName);
+
+            if (client) {
+              setFormData(client); // Устанавливаем данные в форму
+            } else {
+              setError(`Клиент с именем "${decodedName}" не найден`);
+              setLoading(false);
+            }
+          } else {
+            setError('Не удалось загрузить список клиентов');
           }
         } catch (err) {
-          setError('Не удалось загрузить клиента');
+          setError('Ошибка при загрузке клиента: ' + err.message);
+        } finally {
+          setLoading(false);
         }
       };
+
       loadClient();
     }
   }, [mode, name]);
@@ -49,7 +66,7 @@ const ClientFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка сохранения');
+      setError('Ошибка при сохранении: ' + (err.response?.data?.Message || err.message));
     }
   };
 
@@ -62,7 +79,7 @@ const ClientFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка архивации');
+      setError('Ошибка при архивации: ' + err.message);
     }
   };
 
@@ -75,7 +92,7 @@ const ClientFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка возврата в работу');
+      setError('Ошибка при возврате в работу: ' + err.message);
     }
   };
 
@@ -89,10 +106,14 @@ const ClientFormPage = ({ mode }) => {
           setError(res.data.Errors.join(', '));
         }
       } catch (err) {
-        setError('Ошибка удаления');
+        setError('Ошибка при удалении: ' + err.message);
       }
     }
   };
+
+  if (loading) {
+    return <div className="text-center">Загрузка...</div>;
+  }
 
   return (
     <div>
@@ -108,6 +129,9 @@ const ClientFormPage = ({ mode }) => {
             value={formData.Name}
             onChange={handleChange}
             required
+            readOnly={mode === 'create' ? false : true}
+  
+
           />
         </div>
         <div className="mb-3">

@@ -22,8 +22,8 @@ const AdmissionDocsPage = () => {
       try {
         const res = await getAdmissionDocs();
         if (res.data.Success) {
-          setData(res.data.Body);
-          setFilteredData(res.data.Body);
+          setData(res.data.Body.AdmissionDocs);
+          setFilteredData(res.data.Body.AdmissionDocs);
         } else {
           setError(res.data.Errors.join(', '));
         }
@@ -50,7 +50,7 @@ const AdmissionDocsPage = () => {
       result = result.filter(item => item.ResBody && item.ResBody.Resource.Name.toLowerCase().includes(filters.resource.toLowerCase()));
     }
     if (filters.unit) {
-      result = result.filter(item => item.ResBody && item.ResBody.UnitOfMeasurement.UnitDescription.toLowerCase().includes(filters.unit.toLowerCase()));
+      result = result.filter(item => item.ResBody && item.ResBody.UnitOfMeasurement.Name.toLowerCase().includes(filters.unit.toLowerCase()));
     }
 
     setFilteredData(result);
@@ -76,7 +76,7 @@ const AdmissionDocsPage = () => {
           { header: 'Номер', accessor: 'Number' },
           { header: 'Дата', accessor: 'Date' },
           { header: 'Ресурс', accessor: 'ResBody.Resource.Name' },
-          { header: 'Единица измерения', accessor: 'ResBody.UnitOfMeasurement.UnitDescription' },
+          { header: 'Единица измерения', accessor: 'ResBody.UnitOfMeasurement.Name' },
           { header: 'Количество', accessor: 'ResBody.Quantity' },
         ]}
         onRowClick={(row) => window.location.href = `/admission/edit/${row.Number}`}

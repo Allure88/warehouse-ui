@@ -7,26 +7,43 @@ import ToastError from '../components/ToastError';
 const ResourceFormPage = ({ mode }) => {
   const { name } = useParams();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     Name: '',
     State: 'Active'
   });
+
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(mode === 'edit');
 
   useEffect(() => {
-    if (mode === 'edit') {
+    if (mode === 'edit' && name) {
       const loadResource = async () => {
         try {
+          const decodedName = decodeURIComponent(name);
           const res = await getResources();
+
           if (res.data.Success) {
-            const resource = res.data.Body.find(r => r.Name === decodeURIComponent(name));
-            if (resource) setFormData(resource);
+            const resource = res.data.Body.Resources.find(r => r.Name === decodedName);
+
+            if (resource) {
+              setFormData(resource);
+            } else {
+              setError(`Ресурс с именем "${decodedName}" не найден`);
+            }
+          } else {
+            setError('Не удалось загрузить список ресурсов');
           }
         } catch (err) {
-          setError('Не удалось загрузить ресурс');
+          setError('Ошибка при загрузке ресурса: ' + err.message);
+        } finally {
+          setLoading(false);
         }
       };
+
       loadResource();
+    } else if (mode === 'create') {
+      setLoading(false); // Для создания не нужна загрузка
     }
   }, [mode, name]);
 
@@ -41,13 +58,14 @@ const ResourceFormPage = ({ mode }) => {
       const res = mode === 'create'
         ? await createResource(formData)
         : await updateResource(formData);
+
       if (res.data.Success) {
         navigate('/resources');
       } else {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка сохранения');
+      setError('Ошибка при сохранении: ' + (err.response?.data?.Message || err.message));
     }
   };
 
@@ -60,7 +78,7 @@ const ResourceFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка архивации');
+      setError('Ошибка при архивации: ' + err.message);
     }
   };
 
@@ -73,7 +91,7 @@ const ResourceFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка возврата в работу');
+      setError('Ошибка при возврате в работу: ' + err.message);
     }
   };
 
@@ -87,10 +105,14 @@ const ResourceFormPage = ({ mode }) => {
           setError(res.data.Errors.join(', '));
         }
       } catch (err) {
-        setError('Ошибка удаления');
+        setError('Ошибка при удалении: ' + err.message);
       }
     }
   };
+
+  if (loading) {
+    return <div className="text-center">Загрузка ресурса...</div>;
+  }
 
   return (
     <div>
@@ -117,6 +139,7 @@ const ResourceFormPage = ({ mode }) => {
             readOnly
           />
         </div>
+
         <button type="submit" className="btn btn-success me-2">Сохранить</button>
         {formData.State === 'Active' && (
           <button type="button" className="btn btn-warning me-2" onClick={handleArchive}>В архив</button>

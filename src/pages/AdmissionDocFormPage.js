@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAdmissionDocs } from '../services/admissionDocsService';
 import { getResources } from '../services/resourcesService';
+import { getUnits } from '../services/unitsService';
 import { createAdmissionDoc, updateAdmissionDoc, deleteAdmissionDoc } from '../services/admissionDocsService';
 import ToastError from '../components/ToastError';
 
@@ -9,12 +10,13 @@ const AdmissionDocFormPage = ({ mode }) => {
   const { number } = useParams();
   const navigate = useNavigate();
   const [resources, setResources] = useState([]);
+  const [units, setUnits] = useState([]);
   const [formData, setFormData] = useState({
     Number: '',
     Date: '',
     ResBody: {
-      Resource: { Name: '' },
-      UnitOfMeasurement: { UnitDescription: '' },
+      Resource: { Name: '', State: '' },
+      UnitOfMeasurement: { Name: '', State: '' },
       Quantity: 0,
     },
   });
@@ -25,10 +27,21 @@ const AdmissionDocFormPage = ({ mode }) => {
       try {
         const res = await getResources();
         if (res.data.Success) {
-          setResources(res.data.Body);
+          setResources(res.data.Body.Resources);
         }
       } catch (err) {
         setError('Не удалось загрузить ресурсы');
+      }
+    };
+
+    const loadUnits = async () => {
+      try {
+        const res = await getUnits();
+        if (res.data.Success) {
+          setUnits(res.data.Body.Units);
+        }
+      } catch (err) {
+        setError('Не удалось загрузить единицы');
       }
     };
 
@@ -36,7 +49,7 @@ const AdmissionDocFormPage = ({ mode }) => {
       try {
         const res = await getAdmissionDocs();
         if (res.data.Success) {
-          const doc = res.data.Body.find(d => d.Number === number);
+          const doc = res.data.Body.AdmissionDocs.find(d => d.Number === number);
           if (doc) setFormData(doc);
         }
       } catch (err) {
@@ -45,30 +58,52 @@ const AdmissionDocFormPage = ({ mode }) => {
     };
 
     loadResources();
+    loadUnits();
     if (mode === 'edit') loadDoc();
   }, [mode, number]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) => 
+  {
     const { name, value } = e.target;
-    if (name.startsWith('ResBody.')) {
+    if (name.startsWith('ResBody.')) 
+    {
       const [_, field] = name.split('.');
-      if (field === 'Resource') {
+      if (field === 'Resource') 
+      {
         const resource = resources.find(r => r.Name === value);
         setFormData(prev => ({
           ...prev,
           ResBody: {
             ...prev.ResBody,
-            Resource: resource || { Name: '' },
-            UnitOfMeasurement: resource ? { UnitDescription: 'шт' } : { UnitDescription: '' },
+            Resource: resource || { Name: '', State: 'Active' },
+            UnitOfMeasurement: prev.ResBody.UnitOfMeasurement || { Name: '' , State: 'Active'},
           },
         }));
-      } else {
+      } 
+      else if(field === 'UnitOfMeasurement')
+      {
+        const unit = units.find(u=>u.Name === value);
+         setFormData(prev => ({
+          ...prev,
+          ResBody: {
+            ...prev.ResBody,
+            Resource: prev.ResBody.Resource || { Name: '', State: 'Active' },
+            UnitOfMeasurement: unit || { Name: 'шт.', State: 'Active' },
+          },
+        }));
+
+      }
+
+      else
+      {
         setFormData(prev => ({
           ...prev,
           ResBody: { ...prev.ResBody, [field]: value },
         }));
       }
-    } else {
+    } 
+    else
+    {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
@@ -148,6 +183,22 @@ const AdmissionDocFormPage = ({ mode }) => {
           </select>
         </div>
         <div className="mb-3">
+          <label>Единица измерения</label>
+          <select
+            type="text"
+            name="ResBody.UnitOfMeasurement"
+            className="form-control"
+            value={formData.ResBody.UnitOfMeasurement.Name}
+             onChange={handleChange}
+            required
+          >
+             <option value="">Выберите единицу измерения</option>
+            {units.map(r => (
+              <option key={r.Name} value={r.Name}>{r.Name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-3">
           <label>Количество</label>
           <input
             type="number"
@@ -157,16 +208,6 @@ const AdmissionDocFormPage = ({ mode }) => {
             value={formData.ResBody.Quantity}
             onChange={handleChange}
             required
-          />
-        </div>
-        <div className="mb-3">
-          <label>Единица измерения</label>
-          <input
-            type="text"
-            name="ResBody.UnitOfMeasurement"
-            className="form-control"
-            value={formData.ResBody.UnitOfMeasurement.UnitDescription}
-            readOnly
           />
         </div>
         <button type="submit" className="btn btn-success me-2">Сохранить</button>

@@ -33,7 +33,7 @@ function App() {
             <Route path="/clients/edit/:name" element={<ClientFormPage mode="edit" />} />
             <Route path="/units" element={<UnitsPage />} />
             <Route path="/units/create" element={<UnitFormPage mode="create" />} />
-            <Route path="/units/edit/:unitDescription" element={<UnitFormPage mode="edit" />} />
+            <Route path="/units/edit/:name" element={<UnitFormPage mode="edit" />} />
             <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/resources/create" element={<ResourceFormPage mode="create" />} />
             <Route path="/resources/edit/:name" element={<ResourceFormPage mode="edit" />} />

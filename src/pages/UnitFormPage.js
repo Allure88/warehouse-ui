@@ -5,30 +5,47 @@ import { createUnit, updateUnit, archiveUnit, returnToWorkUnit, deleteUnit } fro
 import ToastError from '../components/ToastError';
 
 const UnitFormPage = ({ mode }) => {
-  const { unitDescription } = useParams();
+  const { name } = useParams();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    UnitDescription: '',
+    Name: '',
     State: 'Active'
   });
+
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(mode === 'edit');
 
   useEffect(() => {
-    if (mode === 'edit') {
+    if (mode === 'edit' && name) {
       const loadUnit = async () => {
         try {
+          const decodedDesc = decodeURIComponent(name);
           const res = await getUnits();
+
           if (res.data.Success) {
-            const unit = res.data.Body.find(u => u.UnitDescription === decodeURIComponent(unitDescription));
-            if (unit) setFormData(unit);
+            const unit = res.data.Body.Units.find(u => u.Name === decodedDesc);
+
+            if (unit) {
+              setFormData(unit);
+            } else {
+              setError(`Единица измерения "${decodedDesc}" не найдена`);
+            }
+          } else {
+            setError('Не удалось загрузить список единиц измерения');
           }
         } catch (err) {
-          setError('Не удалось загрузить единицу');
+          setError('Ошибка при загрузке единицы: ' + err.message);
+        } finally {
+          setLoading(false);
         }
       };
+
       loadUnit();
+    } else if (mode === 'create') {
+      setLoading(false);
     }
-  }, [mode, unitDescription]);
+  }, [mode, name]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,13 +58,14 @@ const UnitFormPage = ({ mode }) => {
       const res = mode === 'create'
         ? await createUnit(formData)
         : await updateUnit(formData);
+
       if (res.data.Success) {
         navigate('/units');
       } else {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка сохранения');
+      setError('Ошибка при сохранении: ' + (err.response?.data?.Message || err.message));
     }
   };
 
@@ -60,7 +78,7 @@ const UnitFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка архивации');
+      setError('Ошибка при архивации: ' + err.message);
     }
   };
 
@@ -73,7 +91,7 @@ const UnitFormPage = ({ mode }) => {
         setError(res.data.Errors.join(', '));
       }
     } catch (err) {
-      setError('Ошибка возврата в работу');
+      setError('Ошибка при возврате в работу: ' + err.message);
     }
   };
 
@@ -87,10 +105,14 @@ const UnitFormPage = ({ mode }) => {
           setError(res.data.Errors.join(', '));
         }
       } catch (err) {
-        setError('Ошибка удаления');
+        setError('Ошибка при удалении: ' + err.message);
       }
     }
   };
+
+  if (loading) {
+    return <div className="text-center">Загрузка единицы измерения...</div>;
+  }
 
   return (
     <div>
@@ -101,9 +123,9 @@ const UnitFormPage = ({ mode }) => {
           <label>Название</label>
           <input
             type="text"
-            name="UnitDescription"
+            name="Name"
             className="form-control"
-            value={formData.UnitDescription}
+            value={formData.Name}
             onChange={handleChange}
             required
           />
@@ -117,6 +139,7 @@ const UnitFormPage = ({ mode }) => {
             readOnly
           />
         </div>
+
         <button type="submit" className="btn btn-success me-2">Сохранить</button>
         {formData.State === 'Active' && (
           <button type="button" className="btn btn-warning me-2" onClick={handleArchive}>В архив</button>

@@ -15,8 +15,8 @@ const BalancePage = () => {
       try {
         const res = await getBalances();
         if (res.data.Success) {
-          setData(res.data.Body);
-          setFilteredData(res.data.Body);
+          setData(res.data.Body.Balances);
+          setFilteredData(res.data.Body.Balances);
         } else {
           setError(res.data.Errors.join(', '));
         }
@@ -33,7 +33,7 @@ const BalancePage = () => {
       result = result.filter(item => item.Resource.Name.toLowerCase().includes(filters.resource.toLowerCase()));
     }
     if (filters.unit) {
-      result = result.filter(item => item.UnitOfMeasurement.UnitDescription.toLowerCase().includes(filters.unit.toLowerCase()));
+      result = result.filter(item => item.UnitOfMeasurement.Name.toLowerCase().includes(filters.unit.toLowerCase()));
     }
     setFilteredData(result);
   }, [filters, data]);
@@ -47,7 +47,7 @@ const BalancePage = () => {
         data={filteredData}
         columns={[
           { header: 'Ресурс', accessor: 'Resource.Name' },
-          { header: 'Единица измерения', accessor: 'UnitOfMeasurement.UnitDescription' },
+          { header: 'Единица измерения', accessor: 'UnitOfMeasurement.Name' },
           { header: 'Количество', accessor: 'Quantity' },
         ]}
       />

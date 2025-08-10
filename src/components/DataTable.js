@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DataTable = ({ data = [], columns }) => {
+const DataTable = ({ data = [], columns, onRowClick }) => {
   if (!data.length) return <p>Нет данных</p>;
 
   return (
@@ -14,7 +14,11 @@ const DataTable = ({ data = [], columns }) => {
       </thead>
       <tbody>
         {data.map((row, idx) => (
-          <tr key={idx}>
+          <tr
+            key={idx}
+            onClick={() => onRowClick && onRowClick(row)}
+            style={onRowClick ? { cursor: 'pointer' } : {}}
+          >
             {columns.map((col, i) => {
               const value = col.accessor
                 .split('.')
