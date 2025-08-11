@@ -54,6 +54,7 @@ const ShippingDocsPage = () => {
           dateRange
           resourceFilter
           unitFilter
+          docs
         />
       </div>
       <Link to="/shipping/create" className="btn btn-primary">Создать документ</Link>

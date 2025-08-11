@@ -7,7 +7,7 @@ import ToastError from '../components/ToastError';
 const ClientsPage = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [filters, setFilters] = useState({ Name: '', Address: '' });
+  const [filters, setFilters] = useState({ name: '', adress: '' });
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const ClientsPage = () => {
           setError(res.data.Errors.join(', '));
         }
       } catch (err) {
-        setError('Ошибка подключения к серверу1');
+        setError('Ошибка подключения к серверу');
       }
     };
     fetchData();
@@ -30,11 +30,11 @@ const ClientsPage = () => {
 
   useEffect(() => {
     let result = data;
-    if (filters.Name) {
-      result = result.filter(item => item.Name.toLowerCase().includes(filters.Name.toLowerCase()));
+    if (filters.name) {
+      result = result.filter(item => item.Name.toLowerCase().includes(filters.name.toLowerCase()));
     }
-    if (filters.Address) {
-      result = result.filter(item => item.adress.toLowerCase().includes(filters.Address.toLowerCase()));
+    if (filters.adress) {
+      result = result.filter(item => item.Adress.toLowerCase().includes(filters.adress.toLowerCase()));
     }
     setFilteredData(result);
   }, [filters, data]);
@@ -56,8 +56,8 @@ const ClientsPage = () => {
             type="text"
             className="form-control"
             placeholder="Фильтр по адресу"
-            value={filters.address}
-            onChange={(e) => setFilters({ ...filters, address: e.target.value })}
+            value={filters.adress}
+            onChange={(e) => setFilters({ ...filters, adress: e.target.value })}
             style={{ width: '200px' }}
           />
         </div>

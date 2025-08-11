@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FilterBar = ({ filters, setFilters, dateRange, resourceFilter, unitFilter }) => {
+const FilterBar = ({ filters, setFilters, dateRange, resourceFilter, unitFilter, docs }) => {
   return (
     <div className="mb-3 d-flex gap-2 flex-wrap">
       {dateRange && (
@@ -39,6 +39,7 @@ const FilterBar = ({ filters, setFilters, dateRange, resourceFilter, unitFilter 
           placeholder="Фильтр по единице"
         />
       )}
+      {docs && (
       <input
         type="text"
         className="form-control"
@@ -47,6 +48,7 @@ const FilterBar = ({ filters, setFilters, dateRange, resourceFilter, unitFilter 
         placeholder="Номер документа"
         style={{ width: '200px' }}
       />
+      )}
     </div>
   );
 };

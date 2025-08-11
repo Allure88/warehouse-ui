@@ -66,6 +66,7 @@ const AdmissionDocsPage = () => {
           dateRange
           resourceFilter
           unitFilter
+          docs
         />
       </div>
       <Link to="/admission/create" className="btn btn-primary">Создать документ</Link>
